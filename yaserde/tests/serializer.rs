@@ -302,6 +302,20 @@ fn ser_custom() {
       let _ret = writer.write(xml::writer::XmlEvent::end_element());
       Ok(())
     }
+
+    fn serialize_attributes(
+      &self,
+      attributes: Vec<xml::attribute::OwnedAttribute>,
+      namespace: xml::namespace::Namespace,
+    ) -> Result<
+      (
+        Vec<xml::attribute::OwnedAttribute>,
+        xml::namespace::Namespace,
+      ),
+      String,
+    > {
+      Ok((attributes, namespace))
+    }
   }
 
   let model = Date {

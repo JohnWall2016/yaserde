@@ -25,6 +25,18 @@ pub trait YaDeserialize: Sized {
 /// A **data structure** that can be serialized into any data format supported by YaSerDe.
 pub trait YaSerialize: Sized {
   fn serialize<W: Write>(&self, writer: &mut ser::Serializer<W>) -> Result<(), String>;
+
+  fn serialize_attributes(
+    &self,
+    attributes: Vec<xml::attribute::OwnedAttribute>,
+    namespace: xml::namespace::Namespace,
+  ) -> Result<
+    (
+      Vec<xml::attribute::OwnedAttribute>,
+      xml::namespace::Namespace,
+    ),
+    String,
+  >;
 }
 
 /// A **visitor** that can be implemented to retrieve information from source file.
@@ -89,6 +101,20 @@ macro_rules! serialize_type {
         let event = XmlEvent::characters(&content);
         let _ret = writer.write(event);
         Ok(())
+      }
+
+      fn serialize_attributes(
+        &self,
+        attributes: Vec<xml::attribute::OwnedAttribute>,
+        namespace: xml::namespace::Namespace,
+      ) -> Result<
+        (
+          Vec<xml::attribute::OwnedAttribute>,
+          xml::namespace::Namespace,
+        ),
+        String,
+      > {
+        Ok((attributes, namespace))
       }
     }
   };
