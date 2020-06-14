@@ -50,7 +50,7 @@ impl YaSerdeField {
     self
       .attributes
       .rename
-      .clone()
+      .get_value()
       .unwrap_or_else(|| self.label().as_ref().unwrap().to_string())
   }
 
@@ -68,6 +68,13 @@ impl YaSerdeField {
     let label = self.renamed_label_without_namespace();
 
     format!("{}{}", prefix, label)
+  }
+
+  pub fn renamed_match_all(&self) -> bool {
+    match self.attributes.rename {
+      super::attribute::Rename::MatchAll => true,
+      _ => false
+    }
   }
 
   pub fn get_visitor_ident(&self, struct_name: Option<&syn::Path>) -> Ident {

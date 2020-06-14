@@ -130,4 +130,16 @@ impl<'de, R: Read> Deserializer<R> {
       Err(format!("Unexpected token </{}>", start_name.local_name))
     }
   }
+
+  pub fn read_inner_value_only<T, F: FnOnce(&mut Self) -> Result<T, String>>(
+    &mut self,
+    f: F,
+  ) -> Result<T, String> {
+    if let Ok(XmlEvent::StartElement { .. }) = self.next_event() {
+      let result = f(self)?;
+      Ok(result)
+    } else {
+      Err("Internal error: Bad Event".to_string())
+    }
+  }
 }

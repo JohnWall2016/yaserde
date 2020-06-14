@@ -137,7 +137,57 @@ fn parse_variant(variant: &syn::Variant, name: &Ident) -> Option<TokenStream> {
           .collect(),
       )
     }
-    _ => None,
+    Fields::Named(ref fields) => {
+      let struct_name = Ident::new(
+        &format!("__YaSerde_{}", variant.ident.to_string()), 
+        variant.ident.span()
+      );
+
+      let fake_fields: TokenStream = fields
+        .named
+        .iter()
+        .map(|field| {
+          let label = &field.ident;
+          let ty = &field.ty;
+          let attrs = generate_attrs(&field.attrs);
+          quote! {
+            #attrs #label: #ty,
+          }
+        })
+        .collect();
+
+      let attrs = generate_attrs(&variant.attrs);
+
+      let struct_builder: TokenStream = fields
+        .named
+        .iter()
+        .map(|field| {
+          let label = &field.ident;
+          quote! {
+            #label: value.#label,
+          }
+        })
+        .collect();
+
+      Some(
+        quote! {
+          #xml_element_name => {
+            // fake a YaDeserialize struct from the fields
+            #[allow(non_snake_case, non_camel_case_types)]
+            #[derive(Debug, YaDeserialize)]
+            #attrs
+            struct #struct_name {
+              #fake_fields
+            }
+
+            let value = #struct_name::deserialize(reader)?;
+            // println!("{:?}", value);
+
+            enum_value = Some(#variant_name{#struct_builder});
+          }
+        }
+      )
+    }
   }
 }
 
@@ -226,7 +276,7 @@ fn build_unnamed_visitor_calls(
         Some(quote! {
           let visitor = #visitor_label{};
 
-          let result = reader.read_inner_value::<#field_type, _>(|reader| {
+          let result = reader.read_inner_value_only::<#field_type, _>(|reader| {
             if let XmlEvent::EndElement { .. } = *reader.peek()? {
               return visitor.#visitor("");
             }
@@ -288,4 +338,11 @@ fn build_unnamed_visitor_calls(
     })
     .filter_map(|f| f)
     .collect()
+}
+
+fn generate_attrs(attrs: &Vec<syn::Attribute>) -> TokenStream {
+  attrs.iter().map(|attr| {
+    //println!("{:?}", attr);
+    quote! { #attr }
+  }).collect()
 }

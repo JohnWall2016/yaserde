@@ -3,6 +3,23 @@ use std::collections::BTreeMap;
 use syn::Attribute;
 
 #[derive(Debug, PartialEq, Clone)]
+pub enum Rename {
+  Name(String),
+  MatchAll,
+  None,
+}
+
+impl Rename {
+  pub fn get_value(&self) -> Option<String> {
+    if let Rename::Name(ref s) = *self {
+      Some(s.clone())
+    } else {
+      None
+    }
+  }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct YaSerdeAttribute {
   pub attribute: bool,
   pub default: Option<String>,
@@ -10,7 +27,7 @@ pub struct YaSerdeAttribute {
   pub flatten: bool,
   pub namespaces: BTreeMap<String, String>,
   pub prefix: Option<String>,
-  pub rename: Option<String>,
+  pub rename: Rename,
   pub skip_serializing_if: Option<String>,
   pub text: bool,
 }
@@ -37,7 +54,7 @@ impl YaSerdeAttribute {
     let mut default_namespace = None;
     let mut namespaces = BTreeMap::new();
     let mut prefix = None;
-    let mut rename = None;
+    let mut rename = Rename::None;
     let mut skip_serializing_if = None;
     let mut text = false;
 
@@ -78,7 +95,17 @@ impl YaSerdeAttribute {
                     prefix = get_value(&mut attr_iter);
                   }
                   "rename" => {
-                    rename = get_value(&mut attr_iter);
+                    if let (Some(TokenTree::Punct(op)), Some(v)) = (attr_iter.next(), attr_iter.next()) {
+                      if op.as_char() == '=' {
+                        if let TokenTree::Literal(v) = v {
+                          rename = Rename::Name(v.to_string().replace("\"", ""));
+                        } else if let TokenTree::Ident(id) = v {
+                          if id.to_string() == "_" {
+                            rename = Rename::MatchAll;
+                          }
+                        }
+                      }
+                    }
                   }
                   "skip_serializing_if" => {
                     skip_serializing_if = get_value(&mut attr_iter);
@@ -109,7 +136,11 @@ impl YaSerdeAttribute {
   }
 
   pub fn xml_element_name(&self, ident: &Ident) -> String {
-    self.rename.clone().unwrap_or_else(|| ident.to_string())
+    if let Rename::Name(ref s) = self.rename {
+      s.clone()
+    } else {
+      ident.to_string()
+    }
   }
 
   pub fn prefix_namespace(&self) -> String {
@@ -176,7 +207,7 @@ fn parse_empty_attributes() {
       flatten: false,
       namespaces: BTreeMap::new(),
       prefix: None,
-      rename: None,
+      rename: Rename::None,
       skip_serializing_if: None,
       text: false,
     },
@@ -225,7 +256,7 @@ fn parse_attributes() {
       flatten: false,
       namespaces: BTreeMap::new(),
       prefix: None,
-      rename: None,
+      rename: Rename::None,
       skip_serializing_if: None,
       text: false,
     },
@@ -277,7 +308,7 @@ fn parse_attributes_with_values() {
       flatten: true,
       namespaces,
       prefix: None,
-      rename: None,
+      rename: Rename::None,
       skip_serializing_if: None,
       text: false,
     },

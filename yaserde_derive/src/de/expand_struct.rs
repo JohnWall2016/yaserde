@@ -123,7 +123,12 @@ pub fn parse(
     .filter(|field| !field.is_attribute() || !field.is_flatten())
     .map(|field| {
       let value_label = field.get_value_label();
-      let label_name = field.renamed_label_without_namespace();
+      let label_name = if field.renamed_match_all() {
+        quote! { _ }
+      } else {
+        let label = field.renamed_label_without_namespace();
+        quote! { #label }
+      };
 
       let visit_struct = |struct_name: syn::Path, action: TokenStream| {
         Some(quote! {

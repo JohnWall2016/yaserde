@@ -17,7 +17,7 @@ pub fn build_label_name(
 
   let label = field_attrs
     .rename
-    .clone()
+    .get_value()
     .unwrap_or_else(|| label.to_string());
 
   format!("{}{}", prefix, label)

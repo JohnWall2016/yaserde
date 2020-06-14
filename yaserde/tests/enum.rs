@@ -46,7 +46,7 @@ fn basic_enum() {
 
   assert_eq!(Color::default(), Color::White);
 
-  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize, Default)]
   pub struct RGBColor {
     red: String,
     green: String,
