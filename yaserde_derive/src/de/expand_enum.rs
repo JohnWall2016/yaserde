@@ -68,6 +68,7 @@ pub fn parse(
             }
             XmlEvent::EndElement{ref name} => {
               if name.local_name == named_element {
+                let _root = reader.next_event();
                 break;
               }
               let _root = reader.next_event();
