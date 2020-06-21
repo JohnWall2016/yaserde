@@ -267,13 +267,20 @@ pub fn serialize(
               }
             }
           }),
-          Field::FieldStruct { .. } => Some(quote! {
-            for item in &self.#label {
-              writer.set_start_event_name(None);
-              writer.set_skip_start_end(false);
-              item.serialize(writer)?;
-            }
-          }),
+          Field::FieldStruct { .. } => {
+            let skip = if field.renamed_match_all() {
+              quote! { true }
+            } else {
+              quote! { false }
+            };
+            Some(quote! {
+              for item in &self.#label {
+                writer.set_start_event_name(None);
+                writer.set_skip_start_end(#skip);
+                item.serialize(writer)?;
+              }
+            })
+          },
           Field::FieldVec { .. } => {
             unimplemented!();
           }
