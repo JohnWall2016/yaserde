@@ -8,17 +8,17 @@ pub fn parse(
   root: &str,
   root_attributes: &YaSerdeAttribute,
 ) -> TokenStream {
-  let namespaces_matching = root_attributes.get_namespace_matching(
+  /*let namespaces_matching = root_attributes.get_namespace_matching(
     &None,
     quote!(enum_namespace),
     quote!(named_element),
     true,
-  );
+  );*/
 
   let match_to_enum: TokenStream = data_enum
     .variants
     .iter()
-    .map(|variant| parse_variant(variant, name))
+    .map(|variant| parse_variant(variant, name, root_attributes))
     .filter_map(|f| f)
     .collect();
 
@@ -43,7 +43,7 @@ pub fn parse(
 
         debug!("Enum: start to parse {:?}", named_element);
 
-        #namespaces_matching
+        //#namespaces_matching
 
         #[allow(unused_assignments, unused_mut)]
         let mut enum_value = None;
@@ -100,8 +100,17 @@ pub fn parse(
   }
 }
 
-fn parse_variant(variant: &syn::Variant, name: &Ident) -> Option<TokenStream> {
-  let xml_element_name = YaSerdeAttribute::parse(&variant.attrs).xml_element_name(&variant.ident);
+fn parse_variant(variant: &syn::Variant, name: &Ident, root_attributes: &YaSerdeAttribute) -> Option<TokenStream> {
+  let attributes = YaSerdeAttribute::parse(&variant.attrs);
+
+  let xml_element_name = attributes.xml_element_name(&variant.ident);
+
+  let namespaces_matching = root_attributes.get_namespace_matching(
+    &attributes.prefix,
+    quote!(enum_namespace),
+    quote!(named_element),
+    false,
+  );
 
   let variant_name = {
     let label = &variant.ident;
@@ -111,6 +120,7 @@ fn parse_variant(variant: &syn::Variant, name: &Ident) -> Option<TokenStream> {
   match variant.fields {
     Fields::Unit => Some(quote! {
       #xml_element_name => {
+        #namespaces_matching
         enum_value = Some(#variant_name);
       }
     }),
@@ -130,6 +140,7 @@ fn parse_variant(variant: &syn::Variant, name: &Ident) -> Option<TokenStream> {
           .map(|_field| {
             quote! {
               #xml_element_name => {
+                #namespaces_matching
                 #field_visitors
                 #call_visitors
               }
@@ -173,6 +184,8 @@ fn parse_variant(variant: &syn::Variant, name: &Ident) -> Option<TokenStream> {
       Some(
         quote! {
           #xml_element_name => {
+            #namespaces_matching
+
             // fake a YaDeserialize struct from the fields
             #[allow(non_snake_case, non_camel_case_types)]
             #[derive(Debug, YaDeserialize)]

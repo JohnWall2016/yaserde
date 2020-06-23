@@ -161,7 +161,7 @@ impl YaSerdeAttribute {
     element_name: TokenStream,
     take_root_prefix: bool,
   ) -> TokenStream {
-    let configured_prefix = if take_root_prefix {
+    let configured_prefix = if take_root_prefix || prefix.is_none() {
       self.prefix.clone()
     } else {
       prefix.clone()
@@ -181,7 +181,7 @@ impl YaSerdeAttribute {
       .collect();
 
     quote!(
-      if let Some(namespace) = #element_namespace {
+      if let Some(ref namespace) = #element_namespace {
         match namespace.as_str() {
           #namespaces_matches
           bad_namespace => {
