@@ -8,13 +8,6 @@ pub fn parse(
   root: &str,
   root_attributes: &YaSerdeAttribute,
 ) -> TokenStream {
-  /*let namespaces_matching = root_attributes.get_namespace_matching(
-    &None,
-    quote!(enum_namespace),
-    quote!(named_element),
-    true,
-  );*/
-
   let match_to_enum: TokenStream = data_enum
     .variants
     .iter()
@@ -122,6 +115,7 @@ fn parse_variant(variant: &syn::Variant, name: &Ident, root_attributes: &YaSerde
       #xml_element_name => {
         #namespaces_matching
         enum_value = Some(#variant_name);
+        let _root = reader.next_event();
       }
     }),
     Fields::Unnamed(ref fields) => {

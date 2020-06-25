@@ -41,8 +41,10 @@ fn inner_enum_inspector(
       match variant.fields {
         Fields::Unit => Some(quote! {
           &#name::#label => {
-            let data_event = XmlEvent::characters(#label_name);
-            writer.write(data_event).map_err(|e| e.to_string())?;
+            let mut struct_start_event = XmlEvent::start_element(#label_name);
+            writer.write(struct_start_event).map_err(|e| e.to_string())?;
+            let struct_end_event = XmlEvent::end_element();
+            writer.write(struct_end_event).map_err(|e| e.to_string())?;
           }
         }),
         Fields::Named(ref fields) => {
