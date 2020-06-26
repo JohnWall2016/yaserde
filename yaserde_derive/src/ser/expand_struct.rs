@@ -221,9 +221,15 @@ pub fn serialize(
             (quote!(Some(#label_name.to_string())), false)
           };
 
+          let skip = if field.renamed_match_all() {
+            quote! { true }
+          } else {
+            quote! { false }
+          };
+
           Some(quote! {
             writer.set_start_event_name(#start_event);
-            writer.set_skip_start_end(#skip_start);
+            writer.set_skip_start_end(#skip_start || #skip);
             self.#label.serialize(writer)?;
           })
         }
