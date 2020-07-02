@@ -80,6 +80,10 @@ pub trait Visitor<'de>: Sized {
     Err(format!("Unexpected u64 {:?}", v))
   }
 
+  fn visit_usize(self, v: &str) -> Result<Self::Value, String> {
+    Err(format!("Unexpected usize {:?}", v))
+  }
+
   fn visit_f32(self, v: &str) -> Result<Self::Value, String> {
     Err(format!("Unexpected f32 {:?}", v))
   }
@@ -161,6 +165,7 @@ fn default_visitor() {
   test_type!(visit_u32, "Unexpected u32 \"\"");
   test_type!(visit_i64, "Unexpected i64 \"\"");
   test_type!(visit_u64, "Unexpected u64 \"\"");
+  test_type!(visit_usize, "Unexpected usize \"\"");
   test_type!(visit_str, "Unexpected str \"\"");
 }
 

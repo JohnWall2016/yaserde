@@ -34,7 +34,8 @@ pub fn serialize(
           | Field::FieldI64
           | Field::FieldU64
           | Field::FieldF32
-          | Field::FieldF64 => field.ser_wrap_default_attribute(
+          | Field::FieldF64
+          | Field::FieldUSize => field.ser_wrap_default_attribute(
             Some(quote!(self.#label.to_string())),
             quote!({
               struct_start_event.attr(#label_name, &yaserde_inner)
@@ -61,7 +62,8 @@ pub fn serialize(
             | Field::FieldI64
             | Field::FieldU64
             | Field::FieldF32
-            | Field::FieldF64 => field.ser_wrap_default_attribute(
+            | Field::FieldF64
+            | Field::FieldUSize => field.ser_wrap_default_attribute(
               Some(quote!(self.#label.map_or_else(|| String::new(), |v| v.to_string()))),
               quote!({
                 if let Some(ref value) = self.#label {
@@ -155,7 +157,8 @@ pub fn serialize(
         | Field::FieldI64
         | Field::FieldU64
         | Field::FieldF32
-        | Field::FieldF64 => serialize_element(&label, label_name, &conditions),
+        | Field::FieldF64
+        | Field::FieldUSize => serialize_element(&label, label_name, &conditions),
 
         Field::FieldOption { data_type } => match *data_type {
           Field::FieldString
@@ -169,7 +172,8 @@ pub fn serialize(
           | Field::FieldI64
           | Field::FieldU64
           | Field::FieldF32
-          | Field::FieldF64 => {
+          | Field::FieldF64
+          | Field::FieldUSize => {
             let item_ident = Ident::new("yaserde_item", field.get_span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
@@ -254,7 +258,8 @@ pub fn serialize(
           | Field::FieldI64
           | Field::FieldU64
           | Field::FieldF32
-          | Field::FieldF64 => {
+          | Field::FieldF64
+          | Field::FieldUSize => {
             let item_ident = Ident::new("yaserde_item", field.get_span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
